@@ -1,0 +1,84 @@
+html, body {
+    height: 100%;
+}
+
+form .help-block {
+    color: #d50000;
+}
+
+.content-container {
+    margin-top: 5em;
+    max-width: 80em;
+}
+
+.card {
+    font-size: 1rem;
+}
+
+.card-deck .card:first-child {
+    margin-left: 0;
+}
+
+.card-deck .card:last-child {
+    margin-right: 0;
+}
+
+/* narrow page */
+
+.narrow {
+    max-width: 50em;
+}
+
+/* detail page*/
+
+.repository-detail .card h1 {
+    font-size: 2.5rem;
+    font-weight: 400;
+}
+
+.repository-detail-sidebar .card ul {
+    padding-left: 0;
+}
+
+.repository-detail-sidebar .card ul li {
+    list-style-type: none;
+}
+
+.repository-detail-sidebar .badge {
+    font-size: 100%;
+}
+
+.repository-detail-readme table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.repository-detail-readme table {
+    border: 1px solid #c6cbd1;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.repository-detail-readme table tr {
+    background-color: #fff;
+    border: 1px solid #c6cbd1;
+}
+
+.repository-detail-readme table th, .repository-detail-readme table td {
+    border: 1px solid #dfe2e5;
+    padding: 6px 13px;
+}
+
+.repository-detail-readme table th {
+    font-weight: 600;
+}
+
+.repository-detail-readme table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}
+
+.repository-detail-readme pre {
+    background-color: #f6f8fa;
+    border: 1px solid #dfe2e5;
+    padding: 6px 13px;
+}

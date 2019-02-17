@@ -1,0 +1,90 @@
+{% extends 'haindex/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="narrow mx-auto text-center">
+        <div class="px-3 py-3 pt-md-5 pb-md-4">
+            <h1>
+                {% blocktrans %}Customize your <a href="https://www.home-assistant.io/">Home Assistant</a> setup{% endblocktrans %}
+            </h1>
+        </div>
+
+
+        <div class="card mb-3 mx-auto text-center">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Discover lovelace plugins and custom components" %}</h5>
+                <p class="card-text">
+                    {% trans "Home Assistant is a community driven home automation system that puts local control and privacy first." %}
+                </p>
+                <p class="card-text">
+                    {% trans "It's also pretty flexible and extensible." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3 mx-auto text-center">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Search now" %}</h5>
+                <p class="card-text">
+                    <form action="{% url "haindex_extension_search" %}" method="get" class="my-2 my-lg-0">
+                        <div class="form-group">
+                            <label for="search">{% trans "Search term" %}</label>
+                            <input class="form-control mr-sm-2" name="search" type="search" placeholder="{% trans "Enter search term" %}" aria-label="{% trans "Search" %}">
+                        </div>
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">{% trans "Search" %}</button>
+                    </form>
+                </p>
+            </div>
+        </div>
+
+        <div class="card-deck mb-3 mx-auto text-center">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{% trans "Lovelace" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {% trans "Lovelace is the name of the Home Assistant user interface. It is a fast, customizable and powerful way for users to manage their homes, working both on mobile and desktop." %}
+                    </p>
+                    <p class="card-text">
+                        {% blocktrans %}Lovelace can <a href="https://developers.home-assistant.io/docs/en/lovelace_custom_card.html">easily be extended</a> with <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements">custom elements</a>.{% endblocktrans %}
+                    </p>
+                    <p class="card-text">
+                        {% trans "This index lists community made lovelace elements ready to use." %}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <p class="card-text">
+                        <small class="text-muted">
+                            {% blocktrans with count=lovelace_count %}<strong>{{ count }}</strong> lovelace extensions listed{% endblocktrans %}
+                        </small>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{% trans "Custom components" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {% trans "Home Assistant is built from the ground up to be easily extensible using components. Home Assistant uses Python 3 for the backend." %}
+                    </p>
+                    <p class="card-text">
+                        {% blocktrans %}<a href="https://developers.home-assistant.io/docs/en/development_index.html">Learn how to extend</a> Home Assistant with custom components.{% endblocktrans %}
+                    </p>
+                    <p class="card-text">
+                        {% trans "This index lists community made custom components ready to use." %}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <p class="card-text">
+                        <small class="text-muted">
+                            {% blocktrans with count=component_count %}<strong>{{ count }}</strong> custom componens listed{% endblocktrans %}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

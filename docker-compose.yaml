@@ -1,0 +1,71 @@
+version: '3.7'
+
+services:
+  django:
+    container_name: haindex
+    build: .
+    user: app
+    command: runserver 0:8000
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  celery:
+    container_name: haindex-celery
+    build: .
+    user: app
+    command: celery
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    container_name: haindex-db
+    image: postgres:9.6
+    user: postgres
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: haindex-rabbitmq
+    image: rabbitmq:3.7-alpine
+    volumes:
+      - /var/lib/rabbitmq
+    restart: unless-stopped
+
+  search:
+    container_name: haindex-search
+    image: elasticsearch:6.6.0
+    environment:
+      discovery.type: single-node
+    volumes:
+      - search_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: unless-stopped
+
+volumes:
+  db_data: {}
+  search_data: {}
+
+networks:
+  default:
+    name: ix-dev.eu
+    ipam:
+      config:
+        - subnet: 10.181.0.0/16

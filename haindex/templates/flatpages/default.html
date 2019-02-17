@@ -1,0 +1,17 @@
+{% extends 'haindex/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="row bottom-buffer">
+        <div class="col-md-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ flatpage.title }}</h5>
+                    <p class="card-text">
+                        {{ flatpage.content }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

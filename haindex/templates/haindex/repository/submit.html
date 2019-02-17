@@ -1,0 +1,61 @@
+{% extends 'haindex/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="narrow mx-auto text-center">
+        <div class="row bottom-buffer">
+            <div class="col-md-12">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Submit a new extension" %}</h5>
+                        <p class="card-text">
+                            <p>
+                                {% trans "To get the extension listed, just paste a link to the GitHub repository." %}
+                            </p>
+                             <p>
+                                {% trans "Improve how your extension is displayed by adding a package.yaml file." %}
+                            </p>
+                        </p>
+                        <a href="{% url 'flatpage' url="/package-yaml/" %}" class="card-link">What is a package.yaml?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row bottom-buffer">
+            <div class="col-md-12">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-group {% if form.repository_url.errors %}has-error{% endif %}">
+                                    <label class="control-label" for="repository_url">{% trans "Repository URL" %}</label>
+                                    <input type="url" class="form-control form-control-lg" id="repository_url" name="repository_url" placeholder="{% trans "e.g. https://github.com/lociii/locisymcon" %}" value="{% if form.repository_url.value %}{{ form.repository_url.value }}{% endif %}">
+                                    {% if form.repository_url.errors %}
+                                        <span class="help-block">
+                                            {% for error in form.repository_url.errors %}
+                                                <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="form-group {% if form.captcha.errors %}has-error{% endif %}">
+                                    {{ form.captcha }}
+                                    {% if form.captcha.errors %}
+                                        <span class="help-block">
+                                            {% for error in form.captcha.errors %}
+                                                <p>{% trans "Please complete the captcha" %}</p>
+                                            {% endfor %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn btn-outline-primary">{% trans "Submit" %}</button>
+                            </form>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

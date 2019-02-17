@@ -1,0 +1,245 @@
+{% extends 'haindex/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div class="container-fluid repository-detail">
+        <div class="row align-items-start text-left">
+            <div class="col-4 repository-detail-sidebar">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Type" %}</h5>
+                        <p class="card-text">
+                            {% if result.type == result.TYPE_LOVELACE_ID %}
+                                <span class="badge badge-pill badge-success">{% trans "Lovelace plugin" %}</span>
+                            {% elif result.type == result.TYPE_COMPONENT_ID %}
+                                <span class="badge badge-pill badge-success">{% trans "Custom component" %}</span>
+                            {% else %}
+                                <span class="badge badge-pill badge-warning">{% trans "Unknown type" %}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if result.parent_repository %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Fork" %}</h5>
+                            <p class="card-text">
+                                <span class="badge badge-pill badge-warning">
+                                    {% trans "This extension is a derivation" %}
+                                </span>
+                                <br><br>
+                                {% trans "Original by" %}:
+                                <a href="{% url "haindex_extension_detail" user=result.parent_repository.github_user name=result.parent_repository.github_repo %}">
+                                    {{ result.parent_repository.get_author_name }} ({{ result.parent_repository.last_push|date:"SHORT_DATE_FORMAT" }})
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if result.repository_set.all %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Known forks" %}</h5>
+                            <p class="card-text">
+                                {% for fork in result.repository_set.all %}
+                                    <a href="{% url "haindex_extension_detail" user=fork.github_user name=fork.github_repo %}">
+                                        {{ fork.get_author_name }} ({{ fork.last_push|date:"SHORT_DATE_FORMAT" }})
+                                    </a>
+                                    <br>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Source" %}</h5>
+                        <p class="card-text">
+                            <a href="{{ result.get_url }}">{% trans "GitHub" %}</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Last update" %}</h5>
+                        <p class="card-text">
+                            {{ result.last_push|date:"SHORT_DATE_FORMAT" }} (<a href="{{ result.get_last_commit_url }}">{{ result.last_commit_id_short }}</a>)
+                        </p>
+                    </div>
+                </div>
+                {% if result.dependencies.all %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Dependencies" %}</h5>
+                            <p class="card-text">
+                                <ul>
+                                    {% for dependency in result.dependencies.all %}
+                                        <li class="mb-1">
+                                            <a href="{% url "haindex_extension_detail" user=dependency.github_user name=dependency.github_repo %}">
+                                                {{ dependency.get_name }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if result.provider.all %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Required by" %}</h5>
+                            <p class="card-text">
+                                <ul>
+                                    {% for provider in result.provider.all %}
+                                        <li class="mb-1">
+                                            <a href="{% url "haindex_extension_detail" user=provider.github_user name=provider.github_repo %}">
+                                                {{ provider.get_name }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Author" %}</h5>
+                        <p class="card-text">
+                            <ul>
+                                 <li class="mb-1">
+                                    <a href="{{ result.get_owner_url }}">
+                                        {{ result.get_author_name }}
+                                    </a>
+                                 </li>
+                                {% if result.author_email %}
+                                    <li class="mb-1">
+                                        <i class="mdi mdi-email-outline" aria-hidden="true"></i>
+                                        <a href="mailto:{{ result.author_email }}">
+                                            {% trans "Contact email" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if result.author_homepage %}
+                                    <li class="mb-1">
+                                        <i class="mdi mdi-home-outline" aria-hidden="true"></i>
+                                        <a href="{{ result.author_homepage }}">
+                                            {% trans "Homepage" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+                {% if result.stargazers_count is not None or result.forks_count is not None or result.issues_count is not None %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Statistics" %}</h5>
+                            <p class="card-text">
+                                <ul>
+                                    {% if result.stargazers_count is not None %}
+                                        <li class="mb-1">
+                                            <i class="mdi mdi-star-outline mr-1" aria-hidden="true"></i>
+                                            <a href="{{ result.get_stargazers_url }}">
+                                                {{ result.stargazers_count }} {% trans "stars" %}</a>
+                                        </li>
+                                    {% endif %}
+                                    {% if result.forks_count is not None %}
+                                        <li class="mb-1">
+                                            <i class="mdi mdi-source-branch mr-1" aria-hidden="true"></i>
+                                            <a href="{{ result.get_forks_url }}">
+                                                {{ result.forks_count }} {% trans "forks" %}</a>
+                                        </li>
+                                    {% endif %}
+                                    {% if result.issues_count is not None %}
+                                        <li class="mb-1">
+                                            <i class="mdi mdi-alert-circle-outline mr-1" aria-hidden="true"></i>
+                                            <a href="{{ result.get_issues_url }}">
+                                                {{ result.issues_count }} {% trans "issues" %}</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if result.license %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "License" %}</h5>
+                            <p class="card-text">
+                                <a href="https://opensource.org/search/node/{{ result.license }}">{{ result.license }}</a>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if result.keywords %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Keywords" %}</h5>
+                            <p class="card-text">
+                                {% for keyword in result.keywords %}
+                                    {{ keyword }}<br>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Last import" %}</h5>
+                        <p class="card-text">
+                            {{ result.last_import|date:"SHORT_DATE_FORMAT" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-8 mb-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h1 class="card-title clearfix">
+                            {% if result.name %}
+                                {{ result.name }}
+                            {% else %}
+                                {{ result.get_name }}
+                            {% endif %}
+                        </h1>
+                        {% if result.name %}
+                            <h5 class="card-subtitle mb-2 text-muted">{{ result.get_name }}</h5>
+                        {% endif %}
+                        {% if result.description %}
+                            <p class="card-text">
+                                <h4>{{ result.description }}</h4>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body repository-detail-readme">
+                        <p class="card-text">
+                            {{ result.readme|safe }}
+                        </p>
+                    </div>
+                </div>
+                {% if result.files %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">{% trans "Files" %}</h5>
+                            <p class="card-text">
+                                <ul>
+                                    {% for filename in result.files %}
+                                        <li>
+                                            <a href="{{ result.get_url }}/blob/master/{{ filename }}">{{ filename }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

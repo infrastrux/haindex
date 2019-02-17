@@ -1,0 +1,52 @@
+{% extends 'haindex/base.html' %}
+{% load i18n bootstrap3 %}
+
+{% block content %}
+    <div class="row bottom-buffer">
+        <div class="col-md-12 my-3">
+            <h5>
+                {% if search_term %}
+                    {% blocktrans with count=paginator.count term=search_term %}{{ count }} results for "{{ term }}"{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with count=paginator.count %}{{ count }} results{% endblocktrans %}
+                {% endif %}
+            </h5>
+        </div>
+    </div>
+
+    <div class="row bottom-buffer text-left search-results">
+        <div class="col-md-12">
+            {% for result in results %}
+                <a href="{% url "haindex_extension_detail" user=result.github_user name=result.github_repo %}">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title clearfix">
+                                <span class="float-left">
+                                    {{ result.github_user }} / {{ result.github_repo }}
+                                </span>
+                                <span class="float-right">
+                                    <span class="badge badge-success">{{ result.get_type_display }}</span>
+                                    {{ result.last_push|date:"SHORT_DATE_FORMAT" }}
+                                </span>
+                            </h5>
+                            {% if result.description %}
+                                <h6 class="card-subtitle mb-2 text-muted">{{ result.description }}</h6>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if paginator.num_pages > 1 %}
+        <div class="row bottom-buffer">
+            {% if search_term %}
+                {% url "haindex_extension_search" as search_url %}
+                {% bootstrap_pagination page_obj url=search_url|add:"?search="|add:search_term %}
+            {% else %}
+                {% bootstrap_pagination page_obj %}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
