@@ -66,8 +66,9 @@ class RepositorySubmitView(FormView):
         update_repository.apply_async([repository.id])
 
         # subscribe to repository events
-        from haindex.tasks import subscribe_repository
-        subscribe_repository.apply_async([repository.id])
+        if not repository.webhook_id:
+            from haindex.tasks import subscribe_repository
+            subscribe_repository.apply_async([repository.id])
 
         # let the user know what will happen next
         if created:
