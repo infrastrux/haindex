@@ -54,7 +54,7 @@ Please make sure that you're running
 - docker (at least 17.12.0+)
 - docker-compose (at least 1.18.0)
 
-To manage your host file, the project relies on [Leo Antunes' docker-etchost](chttps://github.com/costela/docker-etchosts).
+To manage your host file, the project relies on [Leo Antunes' docker-etchost](https://github.com/costela/docker-etchosts).
 
 #### Docker
 
