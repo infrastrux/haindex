@@ -31,7 +31,7 @@
                                 {% csrf_token %}
                                 <div class="form-group {% if form.repository_url.errors %}has-error{% endif %}">
                                     <label class="control-label" for="repository_url">{% trans "Repository URL" %}</label>
-                                    <input type="url" class="form-control form-control-lg" id="repository_url" name="repository_url" placeholder="{% trans "e.g. https://github.com/lociii/locisymcon" %}" value="{% if form.repository_url.value %}{{ form.repository_url.value }}{% endif %}">
+                                    <input type="url" class="form-control form-control-lg" id="repository_url" name="repository_url" placeholder="{% trans "e.g. https://github.com/thomasloven/lovelace-card-tools" %}" value="{% if form.repository_url.value %}{{ form.repository_url.value }}{% endif %}">
                                     {% if form.repository_url.errors %}
                                         <span class="help-block">
                                             {% for error in form.repository_url.errors %}
