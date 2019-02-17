@@ -18,10 +18,14 @@ class RepositoryDocument(DocType):
     class Meta:
         model = models.Repository
         fields = [
-            'readme',
-            'description',
             'github_user',
             'github_repo',
+            'name',
+            'author_name',
+            'description',
+            'readme',
+            'last_push',
+            'type',
         ]
         queryset_pagination = 100
 
@@ -39,6 +43,12 @@ class RepositoryDocument(DocType):
     @classmethod
     def search_all(cls, term):
         query = MultiMatch(query=term, fuzziness=2, fields=[
-            'github_user^3', 'github_repo^3', 'description', 'readme'
+            'github_user^5',
+            'github_repo^5',
+            'keywords_text^3',
+            'name',
+            'author_name',
+            'description',
+            'readme',
         ])
         return cls.search().query(query)
