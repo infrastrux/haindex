@@ -105,11 +105,12 @@ start them all by running:
 docker-compose up -d
 ```
 
-Then migrate the database and load the prepared example data:
+Then migrate the database, load the prepared example data and rebuild the search index:
 
 ```bash
 docker-compose run --rm django migrate
 docker-compose run --rm django loaddata haindex/fixtures/repositories.json
+docker-compose run --rm django search_index --rebuild
 ```
 
 You're now ready to access your local copy on [http://haindex.ix-dev.eu:8000/](http://haindex.ix-dev.eu:8000/)
