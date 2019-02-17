@@ -18,6 +18,7 @@ DEBUG=True
 GITHUB_API_USER=<yourGithubApiUser>
 GITHUB_API_TOKEN=<yourGithubApiToken>
 GITHUB_WEBHOOK_SECRET=<webhookSecretUsedOnHookCreation>
+GITHUB_WEBHOOK_ENABLED=False
 PAGE_URL=<basePageUrlUsedAsWebhookTarget>
 RECAPTCHA_PUBLIC_KEY=<yourRecaptchaPublicKey>
 RECAPTCHA_PRIVATE_KEY=<yourRecaptchaPrivateKey>

@@ -212,6 +212,10 @@ class RepositoryUpdater(object):
     def subscribe(self, repository):
         assert isinstance(repository, Repository)
 
+        # webhook creation is not enabled
+        if not settings.GITHUB_WEBHOOK_ENABLED:
+            return
+
         # get repository
         repo = self._load_repo(repository=repository)
         if not repo:
