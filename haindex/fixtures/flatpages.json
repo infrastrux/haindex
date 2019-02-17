@@ -1,0 +1,17 @@
+[
+  {
+    "model": "flatpages.flatpage",
+    "pk": 1,
+    "fields": {
+      "url": "/package-yaml/",
+      "title": "What is a package.yaml?",
+      "content": "The package.yaml file is used to give the extension maintainer the chance to add more meaningful information about their extension than we can crawl from GitHub:\r\n\r\n<pre>\r\nname: My awesome extension\r\ndescription: A short introduction to whatever my awesome extension does\r\ntype: lovelace\r\nkeywords:\r\n  - awesome\r\n  - terrific\r\n  - gigantic\r\nauthor:\r\n  name: John Doe\r\n  email: john@doe.com\r\n  homepage: https://john.doe.com\r\nlicense: MIT\r\ndependencies:\r\n  - thomasloven/lovelace-card-tools\r\nfiles:\r\n  - awesome-gigantic-card.js\r\n</pre>\r\n\r\n<h5>name</h5>\r\nGive your extension a meaningful name.\r\n<br>\r\nGitHub username and repository name used as fallback.\r\n\r\n<h5>description</h5>\r\nDescribe the use of your extension in a few simple words.\r\nGitHub project description used as fallback.\r\n\r\n<h5>type</h5>\r\nCan be either \"lovelace\" or \"component\".\r\nIf not provided, the index will guess by the count of .js and .py files found in the repository.\r\n\r\n<h5>keywords</h5>\r\nAdd some keywords to be found in the search results.\r\n\r\n<h5>author -> name</h5>\r\nWhat will you be called?\r\nGitHub username used as fallback.\r\n\r\n<h5>author -> email</h5>\r\nHow can your users contact you?\r\n\r\n<h5>author -> homepage</h5>\r\nFeel free to use this as a self-marketing opportunity.\r\n\r\n<h5>license</h5>\r\nPlease provide a license name so your users can feel safe.\r\n<br>\r\nFree and open licenses like MIT and Apache preferred :-)\r\n\r\n<h5>dependencies</h5>\r\nIf your extension requires another extension (like card-tools) to work, list them by their GitHub handle, e.g. \"thomasloven/lovelace-card-tools\".\r\n<br>\r\nWe will then index and link the requirement.\r\n\r\n<h5>files</h5>\r\nThis is a special one. It's not directly needed to build the index but for what might come next.\r\n<br>\r\nList all files that must be installed with Home Assistant for your extension to work.\r\n\r\n<p>\r\n<h3>Thanks for supporting the index! You're awesome!</h3>\r\n</p>",
+      "enable_comments": false,
+      "template_name": "",
+      "registration_required": false,
+      "sites": [
+        1
+      ]
+    }
+  }
+]

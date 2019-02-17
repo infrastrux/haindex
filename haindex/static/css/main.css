@@ -23,6 +23,12 @@ form .help-block {
     margin-right: 0;
 }
 
+pre {
+    background-color: #f6f8fa;
+    border: 1px solid #dfe2e5;
+    padding: 6px 13px;
+}
+
 /* narrow page */
 
 .narrow {
@@ -75,10 +81,4 @@ form .help-block {
 
 .repository-detail-readme table tr:nth-child(2n) {
     background-color: #f6f8fa;
-}
-
-.repository-detail-readme pre {
-    background-color: #f6f8fa;
-    border: 1px solid #dfe2e5;
-    padding: 6px 13px;
 }
