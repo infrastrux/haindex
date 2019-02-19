@@ -11,7 +11,7 @@ from github import Github, UnknownObjectException, GithubException
 import yaml
 
 from haindex.common.util.readme import ReadmeRenderer
-from haindex.models import Repository, RepositoryRelease
+from haindex.models import Repository, RepositoryRelease, User
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class RepositoryUpdater(object):
     def _load_repo(self, repository):
         try:
             return self.client.get_repo('{user}/{name}'.format(
-                user=repository.github_user, name=repository.github_repo), lazy=False)
+                user=repository.user.name, name=repository.name), lazy=False)
         except UnknownObjectException:
             # repository wasn't found on github, let's delete it
             repository.delete()
@@ -104,8 +104,10 @@ class RepositoryUpdater(object):
 
         # set parent repository
         if repo.fork and repo.parent:
+            parent_repository_user, created = User.objects.get_or_create(name=repo.parent.owner.login)
+
             parent_repository, created = Repository.objects.get_or_create(
-                github_user=repo.parent.owner.login, github_repo=repo.parent.name)
+                user=parent_repository_user, name=repo.parent.name)
             from haindex.tasks import update_repository
             update_repository.apply_async([parent_repository.id])
             repository.parent_repository = parent_repository
@@ -119,9 +121,11 @@ class RepositoryUpdater(object):
             repository.dependencies.clear()
             if 'dependencies' in package:
                 for dependency in package['dependencies']:
-                    dependency_github_user, dependency_github_repo = dependency.split('/')
+                    dependency_username, dependency_repo_name = dependency.split('/')
+                    dependency_user, created = User.objects.get_or_create(name=dependency_username)
+
                     dependency_repository, created = Repository.objects.get_or_create(
-                        github_user=dependency_github_user, github_repo=dependency_github_repo)
+                        user=dependency_user, name=dependency_repo_name)
                     from haindex.tasks import update_repository
                     update_repository.apply_async([dependency_repository.id])
                     repository.dependencies.add(dependency_repository)

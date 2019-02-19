@@ -6,6 +6,18 @@ from django_extensions.db.models import TimeStampedModel
 from model_utils import Choices
 
 
+class User(TimeStampedModel):
+    name = models.CharField(max_length=100, verbose_name=_('Name'))
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
+        unique_together = ('name', )
+
+
 class Repository(TimeStampedModel):
     TYPE_LOVELACE_ID = 1
     TYPE_LOVELACE = 'lovelace'
@@ -16,8 +28,8 @@ class Repository(TimeStampedModel):
         (TYPE_COMPONENT_ID, TYPE_COMPONENT, _('Custom component')),
     )
 
-    github_user = models.CharField(max_length=100, verbose_name=_('GitHub user'))
-    github_repo = models.CharField(max_length=100, verbose_name=_('GitHub repo'))
+    user = models.ForeignKey(to='haindex.User', on_delete=models.CASCADE, verbose_name=_('User'))
+    name = models.CharField(max_length=100, verbose_name=_('Name'))
     type = models.IntegerField(choices=TYPE_CHOICES, null=True, verbose_name=_('Extension type'))
     parent_repository = models.ForeignKey('haindex.Repository', null=True, blank=True,
                                           verbose_name=_('Parent repository'), on_delete=models.SET_NULL)
@@ -48,7 +60,7 @@ class Repository(TimeStampedModel):
                                           verbose_name=_('Dependencies'))
 
     def get_url(self):
-        return '{owner_url}/{name}'.format(owner_url=self.get_owner_url(), name=self.github_repo)
+        return '{owner_url}/{name}'.format(owner_url=self.get_owner_url(), name=self.name)
 
     def get_raw_url(self):
         return self.get_url() + '/raw/master'
@@ -69,15 +81,15 @@ class Repository(TimeStampedModel):
         return '{repo}/issues'.format(repo=self.get_url())
 
     def get_owner_url(self):
-        return 'https://github.com/{user}'.format(user=self.github_user)
+        return 'https://github.com/{user}'.format(user=self.user.name)
 
     def get_name(self):
-        return '{}/{}'.format(self.github_user, self.github_repo)
+        return '{}/{}'.format(self.user.name, self.name)
 
     def get_author_name(self):
         if self.author_name:
             return self.author_name
-        return self.github_user
+        return self.user.name
 
     @property
     def last_commit_id_short(self):
@@ -91,7 +103,7 @@ class Repository(TimeStampedModel):
     class Meta:
         verbose_name = _('Repository')
         verbose_name_plural = _('Repositories')
-        unique_together = ('github_user', 'github_repo')
+        unique_together = ('user', 'name')
 
 
 class RepositoryRelease(TimeStampedModel):

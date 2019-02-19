@@ -30,10 +30,12 @@
                     <a class="nav-link" href="{% url "haindex_extension_submit" %}">{% trans "Submit extension" %}</a>
                 </li>
             </ul>
-            <form action="{% url "haindex_extension_search" %}" method="get" class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" name="search" type="search" placeholder="{% trans "Enter search term" %}" aria-label="{% trans "Search" %}">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">{% trans "Search" %}</button>
-            </form>
+            {% if not hide_search %}
+                <form action="{% url "haindex_extension_search" %}" method="get" class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" name="search" type="search" placeholder="{% trans "Enter search term" %}" aria-label="{% trans "Search" %}">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">{% trans "Search" %}</button>
+                </form>
+            {% endif %}
         </div>
     </nav>
 </header>

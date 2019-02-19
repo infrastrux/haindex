@@ -14,7 +14,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView, DetailView, ListView
 from django.views.generic.base import View
-from elasticsearch_dsl.query import MultiMatch
 
 from haindex import forms, models, documents
 
@@ -24,7 +23,7 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        # ctx['hide_search'] = True
+        ctx['hide_search'] = True
 
         # list extension counts
         totals = models.Repository.objects.values('type').annotate(total=Count('type'))
@@ -51,15 +50,18 @@ class RepositorySubmitView(FormView):
         if not matches:
             messages.error(self.request, _('Could not parse GitHub URL'))
             return response
-        github_user, github_repo = matches.groups()
+        user_name, repo_name = matches.groups()
 
         # remove .git from name
-        if github_repo.endswith('.git'):
-            github_repo = github_repo.replace('.git', '')
+        if repo_name.endswith('.git'):
+            repo_name = repo_name.replace('.git', '')
+
+        # get or create user
+        user, created = models.User.objects.get_or_create(name=user_name)
 
         # get or create repository
         repository, created = models.Repository.objects.get_or_create(
-            github_user=github_user, github_repo=github_repo)
+            user=user, name=repo_name)
 
         # start data update job
         from haindex.tasks import update_repository
@@ -110,7 +112,7 @@ class RepositoryDetailView(DetailView):
             queryset = self.get_queryset()
 
         queryset = queryset.filter(
-            github_user=self.kwargs.get('user'), github_repo=self.kwargs.get('name')
+            user__name=self.kwargs.get('user'), name=self.kwargs.get('name')
         ).prefetch_related('dependencies', 'repositoryrelease_set')
 
         try:
@@ -152,8 +154,8 @@ class GitHubCallbackView(View):
 
         # get related repository
         repository = models.Repository.objects.filter(
-            github_user=payload['repository']['owner']['login'],
-            github_repo=payload['repository']['name']).first()
+            user__name=payload['repository']['owner']['login'],
+            name=payload['repository']['name']).first()
         if not repository:
             return HttpResponse(status=204)
 
@@ -165,8 +167,9 @@ class GitHubCallbackView(View):
             from haindex.tasks import update_repository_stats
             update_repository_stats.apply_async([repository.id])
         elif event == 'fork':
+            fork_user, created = models.User.objects.get_or_create(name=payload['forkee']['owner']['login'])
             fork_repository, created = models.Repository.objects.get_or_create(
-                github_user=payload['forkee']['owner']['login'], github_repo=payload['forkee']['name'])
+                user=fork_user, name=payload['forkee']['name'])
             from haindex.tasks import update_repository
             update_repository.apply_async([fork_repository.id])
         else:

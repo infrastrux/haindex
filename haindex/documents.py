@@ -14,12 +14,12 @@ search_index.settings(
 @search_index.doc_type
 class RepositoryDocument(DocType):
     keywords_text = fields.TextField()
+    username = fields.TextField()
 
     class Meta:
         model = models.Repository
         fields = [
-            'github_user',
-            'github_repo',
+            'name',
             'name',
             'author_name',
             'description',
@@ -40,11 +40,14 @@ class RepositoryDocument(DocType):
             return ' '.join(instance.keywords)
         return ''
 
+    def prepare_username(self, instance):
+        return instance.user.name
+
     @classmethod
     def search_all(cls, term):
         query = MultiMatch(query=term, fuzziness=2, fields=[
-            'github_user^5',
-            'github_repo^5',
+            'username^5',
+            'name^5',
             'keywords_text^3',
             'name',
             'author_name',

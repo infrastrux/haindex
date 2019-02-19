@@ -68,7 +68,7 @@
                                 </span>
                                 <br><br>
                                 {% trans "Original by" %}:
-                                <a href="{% url "haindex_extension_detail" user=result.parent_repository.github_user name=result.parent_repository.github_repo %}">
+                                <a href="{% url "haindex_extension_detail" user=result.parent_repository.user.name name=result.parent_repository.name %}">
                                     {{ result.parent_repository.get_author_name }} ({{ result.parent_repository.last_push|date:"SHORT_DATE_FORMAT" }})
                                 </a>
                             </p>
@@ -81,7 +81,7 @@
                             <h5 class="card-title clearfix">{% trans "Known forks" %}</h5>
                             <p class="card-text">
                                 {% for fork in result.repository_set.all %}
-                                    <a href="{% url "haindex_extension_detail" user=fork.github_user name=fork.github_repo %}">
+                                    <a href="{% url "haindex_extension_detail" user=fork.user.name name=fork.name %}">
                                         {{ fork.get_author_name }} ({{ fork.last_push|date:"SHORT_DATE_FORMAT" }})
                                     </a>
                                     <br>
@@ -95,6 +95,11 @@
                         <h5 class="card-title clearfix">{% trans "Last update" %}</h5>
                         <p class="card-text">
                             {{ result.last_push|date:"SHORT_DATE_FORMAT" }} (<a href="{{ result.get_last_commit_url }}">{{ result.last_commit_id_short }}</a>)
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                {% trans "Last import" %} {{ result.last_import|date:"SHORT_DATE_FORMAT" }}
+                            </small>
                         </p>
                     </div>
                 </div>
@@ -115,8 +120,10 @@
                                 <div class="alert alert-warning" role="alert">
                                     {% trans "Extension does not have any releases yet" %}
                                 </div>
-                                <p>
-                                    {% blocktrans %}If you're the maintainer, please use <a href="https://help.github.com/articles/creating-releases/">releases</a> to provide a predictable state of your extension.{% endblocktrans %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        {% blocktrans %}If you're the maintainer, please use <a href="https://help.github.com/articles/creating-releases/">releases</a> to provide a predictable state of your extension.{% endblocktrans %}
+                                    </small>
                                 </p>
                             {% endif %}
                         </p>
@@ -130,7 +137,7 @@
                                 <ul>
                                     {% for dependency in result.dependencies.all %}
                                         <li class="mb-1">
-                                            <a href="{% url "haindex_extension_detail" user=dependency.github_user name=dependency.github_repo %}">
+                                            <a href="{% url "haindex_extension_detail" user=dependency.user.name name=dependency.name %}">
                                                 {{ dependency.get_name }}
                                             </a>
                                         </li>
@@ -148,7 +155,7 @@
                                 <ul>
                                     {% for provider in result.provider.all %}
                                         <li class="mb-1">
-                                            <a href="{% url "haindex_extension_detail" user=provider.github_user name=provider.github_repo %}">
+                                            <a href="{% url "haindex_extension_detail" user=provider.user.name name=provider.name %}">
                                                 {{ provider.get_name }}
                                             </a>
                                         </li>
@@ -212,14 +219,6 @@
                         </div>
                     </div>
                 {% endif %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title clearfix">{% trans "Last import" %}</h5>
-                        <p class="card-text">
-                            {{ result.last_import|date:"SHORT_DATE_FORMAT" }}
-                        </p>
-                    </div>
-                </div>
             </div>
             <div class="col-8 mb-4">
                 <div class="card mb-3">

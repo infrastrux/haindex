@@ -17,12 +17,12 @@
     <div class="row bottom-buffer text-left search-results">
         <div class="col-md-12">
             {% for result in results %}
-                <a href="{% url "haindex_extension_detail" user=result.github_user name=result.github_repo %}">
+                <a href="{% url "haindex_extension_detail" user=result.user.name name=result.name %}">
                     <div class="card mb-3">
                         <div class="card-body">
                             <h5 class="card-title clearfix">
                                 <span class="float-left">
-                                    {{ result.github_user }} / {{ result.github_repo }}
+                                    {{ result.user.name }} / {{ result.name }}
                                 </span>
                                 <span class="float-right">
                                     <span class="badge badge-success">{{ result.get_type_display }}</span>
