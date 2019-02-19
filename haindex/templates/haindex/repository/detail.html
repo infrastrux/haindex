@@ -24,29 +24,17 @@
                     <div class="card-body">
                         <h5 class="card-title clearfix">{% trans "Author" %}</h5>
                         <p class="card-text">
-                            <ul>
-                                 <li class="mb-1">
-                                    <a href="{{ result.get_owner_url }}">
-                                        {{ result.get_author_name }}
-                                    </a>
-                                 </li>
-                                {% if result.author_email %}
-                                    <li class="mb-1">
-                                        <i class="mdi mdi-email-outline" aria-hidden="true"></i>
-                                        <a href="mailto:{{ result.author_email }}">
-                                            {% trans "Contact email" %}
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                {% if result.author_homepage %}
-                                    <li class="mb-1">
-                                        <i class="mdi mdi-home-outline" aria-hidden="true"></i>
-                                        <a href="{{ result.author_homepage }}">
-                                            {% trans "Homepage" %}
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
+                            <a href="{{ result.get_owner_url }}">{{ result.get_author_name }}</a>
+                            {% if result.author_email %}
+                                <a href="mailto:{{ result.author_email }}" class="ml-2" data-toggle="tooltip" data-placement="top" title="{% trans "Contact email" %}">
+                                    <i class="mdi mdi-email-outline" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            {% if result.author_homepage %}
+                                <a href="{{ result.author_homepage }}" class="ml-2" data-toggle="tooltip" data-placement="top" title="{% trans "Homepage" %}">
+                                    <i class="mdi mdi-home-outline" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
