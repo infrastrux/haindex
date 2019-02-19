@@ -7,3 +7,8 @@ from haindex import models
 @admin.register(models.Repository)
 class RepositoryAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.RepositoryRelease)
+class RepositoryReleaseAdmin(admin.ModelAdmin):
+    pass

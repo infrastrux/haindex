@@ -1,6 +1,10 @@
 # -*- coding: UTF-8 -*-
+from celery.utils.log import get_task_logger
+
 from haindex.common.util.updater import RepositoryUpdater
 from haindex import celery_app
+
+logger = get_task_logger(__name__)
 
 
 @celery_app.task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5}, retry_backoff=True)

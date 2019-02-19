@@ -111,7 +111,7 @@ class RepositoryDetailView(DetailView):
 
         queryset = queryset.filter(
             github_user=self.kwargs.get('user'), github_repo=self.kwargs.get('name')
-        ).prefetch_related('dependencies')
+        ).prefetch_related('dependencies', 'repositoryrelease_set')
 
         try:
             # Get the single item from the filtered queryset

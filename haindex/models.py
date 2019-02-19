@@ -21,8 +21,8 @@ class Repository(TimeStampedModel):
     type = models.IntegerField(choices=TYPE_CHOICES, null=True, verbose_name=_('Extension type'))
     parent_repository = models.ForeignKey('haindex.Repository', null=True, blank=True,
                                           verbose_name=_('Parent repository'), on_delete=models.SET_NULL)
-
     last_import = models.DateTimeField(null=True, blank=True, verbose_name=_('Last import'))
+    has_package_file = models.BooleanField(verbose_name=_('Contains a package.yaml'), default=False)
 
     last_commit_id = models.CharField(max_length=40, blank=True, verbose_name=_('Last git commit ID'))
     last_push = models.DateTimeField(null=True, blank=True, verbose_name=_('Last git push'))
@@ -92,3 +92,23 @@ class Repository(TimeStampedModel):
         verbose_name = _('Repository')
         verbose_name_plural = _('Repositories')
         unique_together = ('github_user', 'github_repo')
+
+
+class RepositoryRelease(TimeStampedModel):
+    repository = models.ForeignKey(to='haindex.Repository', on_delete=models.CASCADE, verbose_name=_('Repository'))
+    tag_name = models.CharField(max_length=50, verbose_name=_('Tag name'))
+    body = models.TextField(verbose_name=_('Body'))
+    published_at = models.DateTimeField(verbose_name=_('Published at'))
+    zipball_url = models.URLField(verbose_name=_('Zipball URL'))
+
+    def get_url(self):
+        return '{}/releases/tag/{}'.format(self.repository.get_url(), self.tag_name)
+
+    def __str__(self):
+        return '{} @ {}'.format(self.repository.get_name(), self.tag_name)
+
+    class Meta:
+        verbose_name = _('Repository release')
+        verbose_name_plural = _('Repository releases')
+        unique_together = ('repository', 'tag_name')
+        ordering = ('repository', '-published_at')

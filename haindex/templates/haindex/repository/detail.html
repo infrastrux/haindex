@@ -19,6 +19,45 @@
                         </p>
                     </div>
                 </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Author" %}</h5>
+                        <p class="card-text">
+                            <ul>
+                                 <li class="mb-1">
+                                    <a href="{{ result.get_owner_url }}">
+                                        {{ result.get_author_name }}
+                                    </a>
+                                 </li>
+                                {% if result.author_email %}
+                                    <li class="mb-1">
+                                        <i class="mdi mdi-email-outline" aria-hidden="true"></i>
+                                        <a href="mailto:{{ result.author_email }}">
+                                            {% trans "Contact email" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if result.author_homepage %}
+                                    <li class="mb-1">
+                                        <i class="mdi mdi-home-outline" aria-hidden="true"></i>
+                                        <a href="{{ result.author_homepage }}">
+                                            {% trans "Homepage" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title clearfix">{% trans "Source" %}</h5>
+                        <p class="card-text">
+                            <a href="{{ result.get_url }}">{% trans "GitHub" %}</a>
+                        </p>
+                    </div>
+                </div>
                 {% if result.parent_repository %}
                     <div class="card mb-3">
                         <div class="card-body">
@@ -53,17 +92,33 @@
                 {% endif %}
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title clearfix">{% trans "Source" %}</h5>
+                        <h5 class="card-title clearfix">{% trans "Last update" %}</h5>
                         <p class="card-text">
-                            <a href="{{ result.get_url }}">{% trans "GitHub" %}</a>
+                            {{ result.last_push|date:"SHORT_DATE_FORMAT" }} (<a href="{{ result.get_last_commit_url }}">{{ result.last_commit_id_short }}</a>)
                         </p>
                     </div>
                 </div>
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title clearfix">{% trans "Last update" %}</h5>
+                        <h5 class="card-title clearfix">{% trans "Latest releases" %}</h5>
                         <p class="card-text">
-                            {{ result.last_push|date:"SHORT_DATE_FORMAT" }} (<a href="{{ result.get_last_commit_url }}">{{ result.last_commit_id_short }}</a>)
+                            {% if result.repositoryrelease_set.all %}
+                                <ul>
+                                    {% for release in result.repositoryrelease_set.all|slice:"5" %}
+                                        <li class="mb-1 w-100 clearfix">
+                                            <span class="float-left"><a href="{{ release.get_url }}">{{ release.tag_name }}</a></span>
+                                            <span class="float-right">{{ release.published_at|date:"SHORT_DATE_FORMAT" }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-warning" role="alert">
+                                    {% trans "Extension does not have any releases yet" %}
+                                </div>
+                                <p>
+                                    {% blocktrans %}If you're the maintainer, please use <a href="https://help.github.com/articles/creating-releases/">releases</a> to provide a predictable state of your extension.{% endblocktrans %}
+                                </p>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
@@ -103,36 +158,6 @@
                         </div>
                     </div>
                 {% endif %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title clearfix">{% trans "Author" %}</h5>
-                        <p class="card-text">
-                            <ul>
-                                 <li class="mb-1">
-                                    <a href="{{ result.get_owner_url }}">
-                                        {{ result.get_author_name }}
-                                    </a>
-                                 </li>
-                                {% if result.author_email %}
-                                    <li class="mb-1">
-                                        <i class="mdi mdi-email-outline" aria-hidden="true"></i>
-                                        <a href="mailto:{{ result.author_email }}">
-                                            {% trans "Contact email" %}
-                                        </a>
-                                    </li>
-                                {% endif %}
-                                {% if result.author_homepage %}
-                                    <li class="mb-1">
-                                        <i class="mdi mdi-home-outline" aria-hidden="true"></i>
-                                        <a href="{{ result.author_homepage }}">
-                                            {% trans "Homepage" %}
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </p>
-                    </div>
-                </div>
                 {% if result.stargazers_count is not None or result.forks_count is not None or result.issues_count is not None %}
                     <div class="card mb-3">
                         <div class="card-body">
@@ -228,6 +253,11 @@
                         <div class="card-body">
                             <h5 class="card-title clearfix">{% trans "Files" %}</h5>
                             <p class="card-text">
+                                {% if not result.has_package_file %}
+                                    <div class="alert alert-info" role="alert">
+                                        {% trans "The extension did not provide a package definition, so we've guessed the files that need to be included" %}
+                                    </div>
+                                {% endif %}
                                 <ul>
                                     {% for filename in result.files %}
                                         <li>
