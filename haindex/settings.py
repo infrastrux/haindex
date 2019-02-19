@@ -44,6 +44,7 @@ DEBUG = env.bool('DEBUG')
 ALLOWED_HOSTS = [
     '.haindex.ix-dev.eu',
     '.home.schoenbuchallee.de',
+    'localhost',
 ]
 
 # Application definition
@@ -237,8 +238,6 @@ CELERY_SEND_TASK_SENT_EVENT = False
 CELERY_EVENT_QUEUE_TTL = 60
 
 LOGIN_URL = '/admin/'
-
-SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 BOOTSTRAP3 = {'horizontal_label_class': 'col-md-2', 'horizontal_field_class': 'col-md-10', 'success_css_class': ''}
 
