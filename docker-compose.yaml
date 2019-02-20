@@ -20,7 +20,7 @@ services:
     container_name: haindex-celery
     build: .
     user: app
-    command: celery
+    command: run_celery
     volumes:
       - .:/app
     env_file:
