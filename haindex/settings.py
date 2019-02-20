@@ -33,7 +33,9 @@ env = environ.Env(
     RECAPTCHA_PUBLIC_KEY=(str, ''),
     RECAPTCHA_PRIVATE_KEY=(str, ''),
 )
-environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
+envfile = os.path.join(BASE_DIR, '.env')
+if os.path.exists(envfile):
+    environ.Env.read_env(env_file=envfile)
 
 PAGE_URL = env('PAGE_URL')
 
@@ -43,7 +45,7 @@ DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = [
     '.haindex.ix-dev.eu',
-    '.home.schoenbuchallee.de',
+    '.haindex.org',
     'localhost',
 ]
 
