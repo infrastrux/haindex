@@ -7,7 +7,7 @@ from hashlib import sha1
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count
-from django.http import Http404, HttpResponseForbidden, HttpResponseServerError, HttpResponse
+from django.http import Http404, HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.translation import ugettext_lazy as _
@@ -132,9 +132,11 @@ class GitHubCallbackView(View):
             return HttpResponseForbidden('Permission denied')
 
         # verify signature format
+        if '=' not in header_signature:
+            return HttpResponseBadRequest('Invalid header signature')
         sha_name, signature = header_signature.split('=')
         if sha_name != 'sha1':
-            return HttpResponseServerError('Operation not supported', status=501)
+            return HttpResponseBadRequest('Operation not supported')
 
         # verify webhook key
         mac = hmac.new(force_bytes(settings.GITHUB_WEBHOOK_SECRET), msg=force_bytes(request.body), digestmod=sha1)
