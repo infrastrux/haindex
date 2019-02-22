@@ -137,8 +137,8 @@ class RepositoryUpdater(object):
             update_fields.append('files')
 
             if 'name' in package:
-                repository.name = str(package['name'])[:100]
-                update_fields.append('name')
+                repository.display_name = str(package['name'])[:100]
+                update_fields.append('display_name')
 
             if 'description' in package:
                 repository.description = package['description']

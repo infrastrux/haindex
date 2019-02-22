@@ -44,7 +44,7 @@ class Repository(TimeStampedModel):
     webhook_id = models.IntegerField(null=True, blank=True, verbose_name=_('GitGub webhook ID'))
 
     # package.json meta
-    name = models.CharField(max_length=100, blank=True, verbose_name=_('Display name'))
+    display_name = models.CharField(max_length=100, blank=True, verbose_name=_('Display name'))
     description = models.TextField(blank=True, verbose_name=_('Description'))
     readme = models.TextField(blank=True, verbose_name=_('Readme'))
     keywords = ArrayField(base_field=models.CharField(max_length=30), blank=True, null=True,

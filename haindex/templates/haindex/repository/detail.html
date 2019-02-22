@@ -212,13 +212,13 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <h1 class="card-title clearfix">
-                            {% if result.name %}
-                                {{ result.name }}
+                            {% if result.display_name %}
+                                {{ result.display_name }}
                             {% else %}
                                 {{ result.get_name }}
                             {% endif %}
                         </h1>
-                        {% if result.name %}
+                        {% if result.display_name %}
                             <h5 class="card-subtitle mb-2 text-muted">{{ result.get_name }}</h5>
                         {% endif %}
                         {% if result.description %}
