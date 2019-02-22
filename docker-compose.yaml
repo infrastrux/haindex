@@ -4,6 +4,9 @@ services:
   django:
     container_name: haindex
     build: .
+    entrypoint: /app/manage.py
+    expose:
+      - 8000
     user: app
     command: runserver 0:8000
     volumes:
@@ -19,8 +22,8 @@ services:
   celery:
     container_name: haindex-celery
     build: .
+    command: watchmedo auto-restart --directory=/app --patterns=*.py --recursive -- celery worker -A haindex --concurrency=1 --pool=solo --events -l INFO
     user: app
-    command: run_celery
     volumes:
       - .:/app
     env_file:

@@ -1,8 +1,7 @@
-FROM ubuntu:xenial
+FROM python:3.5.6-stretch
 
 ENV PYTHONUNBUFFERED 1
 ENV LC_ALL=C.UTF-8
-ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && apt-get -y install \
       build-essential \
@@ -34,7 +33,3 @@ RUN pyvenv ~/venv && \
 ADD . /app/
 
 ENV DJANGO_SETTINGS_MODULE haindex.settings
-
-EXPOSE 8000
-
-ENTRYPOINT [ "/app/manage.py" ]
