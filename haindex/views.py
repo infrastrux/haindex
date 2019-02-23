@@ -1,18 +1,19 @@
 # -*- coding: UTF-8 -*-
 import hmac
 import json
-import re
 from hashlib import sha1
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import logout, get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.http import Http404, HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils.encoding import force_bytes
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, FormView, DetailView, ListView
+from django.views.generic import TemplateView, FormView, DetailView, ListView, RedirectView
 from django.views.generic.base import View
 
 from haindex import forms, models, documents
@@ -36,32 +37,40 @@ class IndexView(TemplateView):
         return ctx
 
 
-class RepositorySubmitView(FormView):
+class Login(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self):
+        return reverse('social:begin', args=('github',))
+
+
+class Logout(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self):
+        logout(self.request)
+        return reverse('haindex_index')
+
+
+class RepositorySubmitView(LoginRequiredMixin, FormView):
     template_name = 'haindex/repository/submit.html'
     form_class = forms.RepositorySubmitForm
     success_url = reverse_lazy('haindex_index')
 
+    def get_form(self, form_class=None):
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(request=self.request, **self.get_form_kwargs())
+
     def form_valid(self, form):
         response = super().form_valid(form)
 
-        # validate and parse repository url
-        repository_url = form.cleaned_data.get('repository_url')
-        matches = re.match(r'https://github.com/([^/]+)/([^/]+)/?', repository_url)
-        if not matches:
-            messages.error(self.request, _('Could not parse GitHub URL'))
-            return response
-        user_name, repo_name = matches.groups()
-
-        # remove .git from name
-        if repo_name.endswith('.git'):
-            repo_name = repo_name.replace('.git', '')
-
         # get or create user
-        user, created = models.User.objects.get_or_create(name=user_name)
+        user, created = get_user_model().objects.get_or_create(username=form.github_user)
 
         # get or create repository
         repository, created = models.Repository.objects.get_or_create(
-            user=user, name=repo_name)
+            user=user, name=form.github_repo)
 
         # start data update job
         from haindex.tasks import update_repository
@@ -112,7 +121,7 @@ class RepositoryDetailView(DetailView):
             queryset = self.get_queryset()
 
         queryset = queryset.filter(
-            user__name=self.kwargs.get('user'), name=self.kwargs.get('name')
+            user__username=self.kwargs.get('user'), name=self.kwargs.get('name')
         ).prefetch_related('dependencies', 'repositoryrelease_set')
 
         try:
@@ -169,7 +178,8 @@ class GitHubCallbackView(View):
             from haindex.tasks import update_repository_stats
             update_repository_stats.apply_async([repository.id])
         elif event == 'fork':
-            fork_user, created = models.User.objects.get_or_create(name=payload['forkee']['owner']['login'])
+            fork_user, created = get_user_model().objects.get_or_create(
+                username=payload['forkee']['owner']['login'])
             fork_repository, created = models.Repository.objects.get_or_create(
                 user=fork_user, name=payload['forkee']['name'])
             from haindex.tasks import update_repository

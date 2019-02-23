@@ -1,21 +1,10 @@
 # -*- coding: UTF-8 -*-
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from model_utils import Choices
-
-
-class User(TimeStampedModel):
-    name = models.CharField(max_length=100, verbose_name=_('Name'))
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = _('User')
-        verbose_name_plural = _('Users')
-        unique_together = ('name', )
 
 
 class Repository(TimeStampedModel):
@@ -28,7 +17,7 @@ class Repository(TimeStampedModel):
         (TYPE_COMPONENT_ID, TYPE_COMPONENT, _('Custom component')),
     )
 
-    user = models.ForeignKey(to='haindex.User', on_delete=models.CASCADE, verbose_name=_('User'))
+    user = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, verbose_name=_('User'))
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     type = models.IntegerField(choices=TYPE_CHOICES, null=True, verbose_name=_('Extension type'))
     parent_repository = models.ForeignKey('haindex.Repository', null=True, blank=True,
@@ -81,15 +70,15 @@ class Repository(TimeStampedModel):
         return '{repo}/issues'.format(repo=self.get_url())
 
     def get_owner_url(self):
-        return 'https://github.com/{user}'.format(user=self.user.name)
+        return 'https://github.com/{user}'.format(user=self.user.username)
 
     def get_name(self):
-        return '{}/{}'.format(self.user.name, self.name)
+        return '{}/{}'.format(self.user.username, self.name)
 
     def get_author_name(self):
         if self.author_name:
             return self.author_name
-        return self.user.name
+        return self.user.username
 
     @property
     def last_commit_id_short(self):

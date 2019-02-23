@@ -56,7 +56,7 @@
                                 </span>
                                 <br><br>
                                 {% trans "Original by" %}:
-                                <a href="{% url "haindex_extension_detail" user=result.parent_repository.user.name name=result.parent_repository.name %}">
+                                <a href="{% url "haindex_extension_detail" user=result.parent_repository.user.username name=result.parent_repository.name %}">
                                     {{ result.parent_repository.get_author_name }} ({{ result.parent_repository.last_push|date:"SHORT_DATE_FORMAT" }})
                                 </a>
                             </p>
@@ -69,7 +69,7 @@
                             <h5 class="card-title clearfix">{% trans "Known forks" %}</h5>
                             <p class="card-text">
                                 {% for fork in result.repository_set.all %}
-                                    <a href="{% url "haindex_extension_detail" user=fork.user.name name=fork.name %}">
+                                    <a href="{% url "haindex_extension_detail" user=fork.user.username name=fork.name %}">
                                         {{ fork.get_author_name }} ({{ fork.last_push|date:"SHORT_DATE_FORMAT" }})
                                     </a>
                                     <br>
@@ -85,9 +85,25 @@
                             {{ result.last_push|date:"SHORT_DATE_FORMAT" }} (<a href="{{ result.get_last_commit_url }}">{{ result.last_commit_id_short }}</a>)
                         </p>
                         <p class="card-text">
-                            <small class="text-muted">
-                                {% trans "Last import" %} {{ result.last_import|date:"SHORT_DATE_FORMAT" }}
-                            </small>
+                            <p>
+                                <small class="text-muted">
+                                    {% trans "Last import" %} {{ result.last_import|date:"SHORT_DATE_FORMAT" }}
+                                </small>
+                            </p>
+                            {% if not result.webhook_id %}
+                                <p>
+                                    <small class="text-muted">
+                                        <span class="badge badge-pill badge-info">
+                                            {% trans "Update subscription missing" %}
+                                        </span>
+                                        <br>
+                                        {% url "haindex_extension_submit" as submit_extension_url %}
+                                        {% blocktrans with url=submit_extension_url %}If you're the maintainer, please <a href="{{ url }}">sign in</a> to allow the index to subscribe for instant updates.{% endblocktrans %}
+                                        <br>
+                                        {% trans "Until then this extension will only be updated once per day." %}
+                                    </small>
+                                </p>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
@@ -105,14 +121,13 @@
                                     {% endfor %}
                                 </ul>
                             {% else %}
-                                <div class="alert alert-warning" role="alert">
-                                    {% trans "Extension does not have any releases yet" %}
-                                </div>
-                                <p class="card-text">
-                                    <small class="text-muted">
-                                        {% blocktrans %}If you're the maintainer, please use <a href="https://help.github.com/articles/creating-releases/">releases</a> to provide a predictable state of your extension.{% endblocktrans %}
-                                    </small>
-                                </p>
+                                <small class="text-muted">
+                                    <span class="badge badge-pill badge-info">
+                                        {% trans "Extension does not have any releases yet" %}
+                                    </span>
+                                    <br>
+                                    {% blocktrans %}If you're the maintainer, please use <a href="https://help.github.com/articles/creating-releases/">releases</a> to provide a predictable state of your extension.{% endblocktrans %}
+                                </small>
                             {% endif %}
                         </p>
                     </div>
@@ -125,7 +140,7 @@
                                 <ul>
                                     {% for dependency in result.dependencies.all %}
                                         <li class="mb-1">
-                                            <a href="{% url "haindex_extension_detail" user=dependency.user.name name=dependency.name %}">
+                                            <a href="{% url "haindex_extension_detail" user=dependency.user.username name=dependency.name %}">
                                                 {{ dependency.get_name }}
                                             </a>
                                         </li>
@@ -143,7 +158,7 @@
                                 <ul>
                                     {% for provider in result.provider.all %}
                                         <li class="mb-1">
-                                            <a href="{% url "haindex_extension_detail" user=provider.user.name name=provider.name %}">
+                                            <a href="{% url "haindex_extension_detail" user=provider.user.username name=provider.name %}">
                                                 {{ provider.get_name }}
                                             </a>
                                         </li>

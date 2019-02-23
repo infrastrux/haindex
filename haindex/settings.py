@@ -32,6 +32,8 @@ env = environ.Env(
     CELERY_BROKER_URL=(str, ''),
     RECAPTCHA_PUBLIC_KEY=(str, ''),
     RECAPTCHA_PRIVATE_KEY=(str, ''),
+    SOCIAL_AUTH_GITHUB_KEY=(str, ''),
+    SOCIAL_AUTH_GITHUB_SECRET=(str, ''),
 )
 envfile = os.path.join(BASE_DIR, '.env')
 if os.path.exists(envfile):
@@ -72,7 +74,7 @@ INSTALLED_APPS = [
     'django_celery_results',
     'django_celery_beat',
     'snowpenguin.django.recaptcha2',
-
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -239,8 +241,6 @@ CELERY_SEND_EVENTS = False
 CELERY_SEND_TASK_SENT_EVENT = False
 CELERY_EVENT_QUEUE_TTL = 60
 
-LOGIN_URL = '/admin/'
-
 BOOTSTRAP3 = {'horizontal_label_class': 'col-md-2', 'horizontal_field_class': 'col-md-10', 'success_css_class': ''}
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -249,6 +249,34 @@ GITHUB_API_USER = env('GITHUB_API_USER')
 GITHUB_API_TOKEN = env('GITHUB_API_TOKEN')
 GITHUB_WEBHOOK_SECRET = env('GITHUB_WEBHOOK_SECRET')
 GITHUB_WEBHOOK_ENABLED = env('GITHUB_WEBHOOK_ENABLED')
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.github.GithubOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+LOGIN_URL = '/login/'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/extension/submit/'
+# SOCIAL_AUTH_NEW_USER_REDIRECT_URL
+# SOCIAL_AUTH_LOGIN_ERROR_URL
+# SOCIAL_AUTH_DISCONNECT_REDIRECT_URL
+
+SOCIAL_AUTH_COMPLETE_URL_NAME = 'socialauth_complete'
+SOCIAL_AUTH_ASSOCIATE_URL_NAME = 'socialauth_associate_complete'
+SOCIAL_AUTH_UUID_LENGTH = 16
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', 'username']
+SOCIAL_AUTH_GITHUB_KEY = env('SOCIAL_AUTH_GITHUB_KEY')
+SOCIAL_AUTH_GITHUB_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET')
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'haindex.pipeline.social_auth.associate_by_username',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
 
 RECAPTCHA_PUBLIC_KEY = env('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = env('RECAPTCHA_PRIVATE_KEY')

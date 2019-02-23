@@ -3,6 +3,7 @@ import logging
 import os
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, EmailValidator
 from django.urls import reverse
@@ -11,41 +12,45 @@ from github import Github, UnknownObjectException, GithubException
 import yaml
 
 from haindex.common.util.readme import ReadmeRenderer
-from haindex.models import Repository, RepositoryRelease, User
+from haindex.models import Repository, RepositoryRelease
 
 logger = logging.getLogger(__name__)
 
 
 class RepositoryUpdater(object):
-    def __init__(self):
-        super().__init__()
-        self._client = None
-        self._file_list = dict()
+    def __init__(self, repository, *args, **kwargs):
+        assert isinstance(repository, Repository)
 
-    @property
-    def client(self):
-        if self._client is None:
-            self._client = Github(login_or_token=settings.GITHUB_API_USER,
-                                  password=settings.GITHUB_API_TOKEN)
-        return self._client
+        self.repository = repository
+        self._file_list = None
+        super().__init__(*args, **kwargs)
 
-    def _load_repo(self, repository):
+    def get_client(self):
+        # authenticate as repository owner
+        auth = self.repository.user.social_auth.filter(provider='github').first()
+        if auth:
+            access_token = auth.extra_data.get('access_token')
+            if access_token:
+                return Github(login_or_token=access_token)
+
+        # default system user access
+        return Github(login_or_token=settings.GITHUB_API_USER, password=settings.GITHUB_API_TOKEN)
+
+    def _load_repo(self):
         try:
-            return self.client.get_repo('{user}/{name}'.format(
-                user=repository.user.name, name=repository.name), lazy=False)
+            return self.get_client().get_repo('{user}/{name}'.format(
+                user=self.repository.user.username, name=self.repository.name), lazy=False)
         except UnknownObjectException:
             # repository wasn't found on github, let's delete it
-            repository.delete()
-        except GithubException as e:
+            self.repository.delete()
+        except Exception as e:
             logger.exception(e)
 
         return None
 
-    def update(self, repository):
-        assert isinstance(repository, Repository)
-
+    def update(self):
         # get repository
-        repo = self._load_repo(repository=repository)
+        repo = self._load_repo()
         if not repo:
             return
 
@@ -61,31 +66,31 @@ class RepositoryUpdater(object):
 
         # update description
         if repo.description:
-            repository.description = repo.description
+            self.repository.description = repo.description
             update_fields.append('description')
 
         # update stat counts
-        repository.stargazers_count = repo.stargazers_count
+        self.repository.stargazers_count = repo.stargazers_count
         update_fields.append('stargazers_count')
-        repository.forks_count = repo.forks_count
+        self.repository.forks_count = repo.forks_count
         update_fields.append('forks_count')
-        repository.issues_count = repo.open_issues_count
+        self.repository.issues_count = repo.open_issues_count
         update_fields.append('issues_count')
 
         # set last repository update
-        repository.last_push = repo.pushed_at
+        self.repository.last_push = repo.pushed_at
         update_fields.append('last_push')
 
         # get latest commit hash
         try:
             latest_commit = repo.get_commits()[0]
-            repository.last_commit_id = latest_commit.sha
+            self.repository.last_commit_id = latest_commit.sha
             update_fields.append('last_commit_id')
         except GithubException as e:
             logger.exception(e)
             return
 
-        # try to get package.yaml and readme
+        # try to get package.yaml and readme from the project root
         package = None
         for item in contents:
             # try to load package description
@@ -98,64 +103,69 @@ class RepositoryUpdater(object):
             # try to load readme
             elif item.type == 'file' and item.path.lower() in ('readme', 'readme.md', 'readme.rst', 'readme.txt'):
                 filename, extension = os.path.splitext(item.path.lower())
-                repository.readme = ReadmeRenderer().get_html(
+                self.repository.readme = ReadmeRenderer().get_html(
                     content=item.decoded_content.decode('UTF-8'), extension=extension)
                 update_fields.append('readme')
 
         # set parent repository
         if repo.fork and repo.parent:
-            parent_repository_user, created = User.objects.get_or_create(name=repo.parent.owner.login)
+            parent_repository_user, created = get_user_model().objects.get_or_create(username=repo.parent.owner.login)
 
             parent_repository, created = Repository.objects.get_or_create(
                 user=parent_repository_user, name=repo.parent.name)
-            from haindex.tasks import update_repository
-            update_repository.apply_async([parent_repository.id])
-            repository.parent_repository = parent_repository
+            self.repository.parent_repository = parent_repository
             update_fields.append('parent_repository')
 
-        # parse package.yaml if found
-        if package:
-            repository.has_package_file = True
-            update_fields.append('has_package_file')
+            # index parent repository
+            if created:
+                from haindex.tasks import update_repository
+                update_repository.apply_async([parent_repository.id])
 
-            repository.dependencies.clear()
+        # handle package.yaml
+        self.repository.has_package_file = package is not None
+        update_fields.append('has_package_file')
+
+        if package:
+            self.repository.dependencies.clear()
             if 'dependencies' in package:
                 for dependency in package['dependencies']:
                     dependency_username, dependency_repo_name = dependency.split('/')
-                    dependency_user, created = User.objects.get_or_create(name=dependency_username)
+                    dependency_user, created = get_user_model().objects.get_or_create(username=dependency_username)
 
                     dependency_repository, created = Repository.objects.get_or_create(
                         user=dependency_user, name=dependency_repo_name)
-                    from haindex.tasks import update_repository
-                    update_repository.apply_async([dependency_repository.id])
-                    repository.dependencies.add(dependency_repository)
 
-            repository.files = []
+                    if created:
+                        from haindex.tasks import update_repository
+                        update_repository.apply_async([dependency_repository.id])
+                    self.repository.dependencies.add(dependency_repository)
+
+            self.repository.files = []
             if 'files' in package:
                 for filename in package['files']:
-                    repository.files.append(filename)
+                    self.repository.files.append(filename)
             update_fields.append('files')
 
             if 'name' in package:
-                repository.display_name = str(package['name'])[:100]
+                self.repository.display_name = str(package['name'])[:100]
                 update_fields.append('display_name')
 
             if 'description' in package:
-                repository.description = package['description']
+                self.repository.description = package['description']
                 update_fields.append('description')
 
             if 'type' in package:
                 if package['type'] in (Repository.TYPE_LOVELACE, Repository.TYPE_COMPONENT):
-                    repository.type = getattr(Repository.TYPE_CHOICES, package['type'])
+                    self.repository.type = getattr(Repository.TYPE_CHOICES, package['type'])
                     update_fields.append('type')
 
             if 'keywords' in package and isinstance(package['keywords'], list):
-                repository.keywords = package['keywords']
+                self.repository.keywords = package['keywords']
                 update_fields.append('keywords')
 
             if 'author' in package:
                 if 'name' in package['author']:
-                    repository.author_name = str(package['author']['name'])[:100]
+                    self.repository.author_name = str(package['author']['name'])[:100]
                     update_fields.append('author_name')
                 if 'email' in package['author']:
                     try:
@@ -163,7 +173,7 @@ class RepositoryUpdater(object):
                     except ValidationError:
                         pass
                     else:
-                        repository.author_email = package['author']['email']
+                        self.repository.author_email = package['author']['email']
                         update_fields.append('author_email')
                 if 'homepage' in package['author']:
                     try:
@@ -171,39 +181,39 @@ class RepositoryUpdater(object):
                     except ValidationError:
                         pass
                     else:
-                        repository.author_homepage = package['author']['homepage']
+                        self.repository.author_homepage = package['author']['homepage']
                         update_fields.append('author_homepage')
 
             if 'license' in package:
-                repository.license = str(package['license'])[:100]
+                self.repository.license = str(package['license'])[:100]
                 update_fields.append('license')
 
         # guess extension type by js/py file count in repository if not yet set
-        if not repository.type:
+        if not self.repository.type:
             file_list = self._get_filelist(repo=repo, contents=contents)
 
             if file_list.get_count('.js') > 0 or file_list.get_count('.py') > 0:
                 if file_list.get_count('.js') > file_list.get_count('.py'):
-                    repository.type = getattr(Repository.TYPE_CHOICES, Repository.TYPE_LOVELACE)
+                    self.repository.type = getattr(Repository.TYPE_CHOICES, Repository.TYPE_LOVELACE)
                 else:
-                    repository.type = getattr(Repository.TYPE_CHOICES, Repository.TYPE_COMPONENT)
+                    self.repository.type = getattr(Repository.TYPE_CHOICES, Repository.TYPE_COMPONENT)
                 update_fields.append('type')
 
         # guess required files by file extension
-        if not repository.files or len(repository.files) == 0:
-            if repository.type == Repository.TYPE_COMPONENT_ID:
-                repository.files = self._get_filelist(repo=repo, contents=contents).get_files(extension='.py')
+        if not self.repository.files or len(self.repository.files) == 0:
+            if self.repository.type == Repository.TYPE_COMPONENT_ID:
+                self.repository.files = self._get_filelist(repo=repo, contents=contents).get_files(extension='.py')
                 update_fields.append('files')
-            elif repository.type == Repository.TYPE_LOVELACE_ID:
-                repository.files = self._get_filelist(repo=repo, contents=contents).get_files(extension='.js')
+            elif self.repository.type == Repository.TYPE_LOVELACE_ID:
+                self.repository.files = self._get_filelist(repo=repo, contents=contents).get_files(extension='.js')
                 update_fields.append('files')
 
         # set last update
-        repository.last_import = timezone.now()
+        self.repository.last_import = timezone.now()
         update_fields.append('last_import')
 
         # save updated data
-        repository.save(update_fields=set(update_fields))
+        self.repository.save(update_fields=set(update_fields))
 
         # update releases
         try:
@@ -213,20 +223,20 @@ class RepositoryUpdater(object):
             return
         for release in releases:
             RepositoryRelease.objects.get_or_create(
-                repository=repository, tag_name=release.tag_name, defaults=dict(
+                repository=self.repository, tag_name=release.tag_name, defaults=dict(
                     body=release.body, published_at=release.published_at, zipball_url=release.zipball_url))
 
     def _get_filelist(self, repo, contents):
-        if repo.full_name not in self._file_list:
-            self._file_list[repo.full_name] = FileList(repo=repo)
-            self._file_list[repo.full_name].count(contents=contents)
-        return self._file_list[repo.full_name]
+        if self._file_list is None:
+            self._file_list = FileList(repo=repo)
+            self._file_list.count(contents=contents)
+        return self._file_list
 
     def update_stats(self, repository):
         assert isinstance(repository, Repository)
 
         # get repository
-        repo = self._load_repo(repository=repository)
+        repo = self._load_repo()
         if not repo:
             return
 
@@ -243,16 +253,14 @@ class RepositoryUpdater(object):
 
         repository.save(update_fields=update_fields)
 
-    def subscribe(self, repository):
-        assert isinstance(repository, Repository)
-
+    def subscribe(self):
         # webhook creation is not enabled
         if not settings.GITHUB_WEBHOOK_ENABLED:
             logger.warning('GitHub webhook creation has been disabled in config')
             return
 
         # get repository
-        repo = self._load_repo(repository=repository)
+        repo = self._load_repo()
         if not repo:
             return
 
@@ -265,8 +273,8 @@ class RepositoryUpdater(object):
         hook_events = ['push', 'watch', 'issues', 'pull_request', 'fork']
         webhook = repo.create_hook('web', hook_config, hook_events, active=True)
 
-        repository.webhook_id = webhook.id
-        repository.save(update_fields=['webhook_id'])
+        self.repository.webhook_id = webhook.id
+        self.repository.save(update_fields=['webhook_id'])
 
 
 class FileList(object):

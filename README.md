@@ -78,18 +78,21 @@ DEBUG=True
 #####################
 
 # your username on github
-GITHUB_API_USER=<yourGithubApiUser>
+GITHUB_API_USER=
 # a personal access token as generated on https://github.com/settings/tokens
-GITHUB_API_TOKEN=<yourGithubApiToken>
+GITHUB_API_TOKEN=
 # any secret string that will be used to create and verify github webhook requests
-GITHUB_WEBHOOK_SECRET=<webhookSecretUsedOnHookCreation>
+GITHUB_WEBHOOK_SECRET=
 # define if webhook creation should be enabled, your webserver must be publically accessible to receive webhooks
 GITHUB_WEBHOOK_ENABLED=False
+# register a new github oauth app on https://github.com/settings/applications/new with callback url https://haindex.org/complete/github/
+SOCIAL_AUTH_GITHUB_KEY=
+SOCIAL_AUTH_GITHUB_SECRET=
 # the base url of your page that will be used as the webhook target
-PAGE_URL=<basePageUrlUsedAsWebhookTarget>
+PAGE_URL=
 # you recaptcha public and private keys as generated on https://www.google.com/recaptcha/admin
-RECAPTCHA_PUBLIC_KEY=<yourRecaptchaPublicKey>
-RECAPTCHA_PRIVATE_KEY=<yourRecaptchaPrivateKey>
+RECAPTCHA_PUBLIC_KEY=
+RECAPTCHA_PRIVATE_KEY=
 ```
 
 The default docker-compose setup contains containers for

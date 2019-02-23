@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django_elasticsearch_dsl import DocType, Index, fields
+from elasticsearch_dsl import analyzer
 from elasticsearch_dsl.query import MultiMatch
 
 from haindex import models
@@ -10,20 +11,31 @@ search_index.settings(
     number_of_replicas=0
 )
 
+html_strip = analyzer(
+    'html_strip',
+    tokenizer="standard",
+    filter=["standard", "lowercase", "stop", "snowball"],
+    char_filter=["html_strip"]
+)
+
 
 @search_index.doc_type
 class RepositoryDocument(DocType):
     keywords_text = fields.TextField()
     username = fields.TextField()
+    readme = fields.StringField(
+        analyzer=html_strip,
+        fields={
+            'raw': fields.StringField(analyzer='keyword'),
+        }
+    )
 
     class Meta:
         model = models.Repository
         fields = [
             'name',
-            'name',
             'author_name',
             'description',
-            'readme',
             'last_push',
             'type',
         ]
@@ -32,6 +44,7 @@ class RepositoryDocument(DocType):
     def get_queryset(self):
         """
         order queryset for consistent pagination
+        only index extensions with a package file
         """
         return super().get_queryset().order_by('id')
 
@@ -41,7 +54,7 @@ class RepositoryDocument(DocType):
         return ''
 
     def prepare_username(self, instance):
-        return instance.user.name
+        return instance.user.username
 
     @classmethod
     def search_all(cls, term):

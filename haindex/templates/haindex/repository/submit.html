@@ -9,14 +9,19 @@
                     <div class="card-body">
                         <h5 class="card-title">{% trans "Submit a new extension" %}</h5>
                         <p class="card-text">
-                            <p>
-                                {% trans "To get the extension listed, just paste a link to the GitHub repository." %}
-                            </p>
-                             <p>
-                                {% trans "Improve how your extension is displayed by adding a package.yaml file." %}
-                            </p>
+                            <ol class="text-left">
+                                <li>
+                                    {% url 'flatpage' url="/package-yaml/" as url_package_yaml %}
+                                    {% blocktrans with link=url_package_yaml %}To help the index get the best information off your extension, you must add a <a href="{{ url_package_yaml }}">package.yaml</a> to your repository.{% endblocktrans %}
+                                </li>
+                                <li>
+                                    {% trans "To provide a predictable state of your extension, you should <a href=\'https://help.github.com/en/articles/creating-releases\'>make releses</a> so that your users can install specific versions." %}
+                                </li>
+                                <li>
+                                    {% trans "Paste a link to the GitHub repository below to make the service aware of your extension and have it indexed." %}
+                                </li>
+                            </ol>
                         </p>
-                        <a href="{% url 'flatpage' url="/package-yaml/" %}" class="card-link">What is a package.yaml?</a>
                     </div>
                 </div>
             </div>
@@ -27,13 +32,16 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <p class="card-text">
+                            <p class="text-left">
+                                {% trans "Submitting the repository will check it for a package.yaml file. This might take a second." %}
+                            </p>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="form-group {% if form.repository_url.errors %}has-error{% endif %}">
                                     <label class="control-label" for="repository_url">{% trans "Repository URL" %}</label>
                                     <input type="url" class="form-control form-control-lg" id="repository_url" name="repository_url" placeholder="{% trans "e.g. https://github.com/thomasloven/lovelace-card-tools" %}" value="{% if form.repository_url.value %}{{ form.repository_url.value }}{% endif %}">
                                     {% if form.repository_url.errors %}
-                                        <span class="help-block">
+                                        <span class="help-block text-left">
                                             {% for error in form.repository_url.errors %}
                                                 <p>{{ error }}</p>
                                             {% endfor %}
@@ -43,7 +51,7 @@
                                 <div class="form-group {% if form.captcha.errors %}has-error{% endif %}">
                                     {{ form.captcha }}
                                     {% if form.captcha.errors %}
-                                        <span class="help-block">
+                                        <span class="help-block text-left">
                                             {% for error in form.captcha.errors %}
                                                 <p>{% trans "Please complete the captcha" %}</p>
                                             {% endfor %}
