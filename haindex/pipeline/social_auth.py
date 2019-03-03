@@ -20,4 +20,4 @@ def associate_by_username(backend, details, user=None, *args, **kwargs):
         elif len(users) > 1:
             raise AuthException(backend, 'The given username is associated with another account')
         else:
-            return {'user': users[0], 'is_new': False}
+            return {'user': users.first(), 'is_new': False}
