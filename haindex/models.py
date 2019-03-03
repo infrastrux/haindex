@@ -86,6 +86,10 @@ class Repository(TimeStampedModel):
             return self.last_commit_id[:7]
         return ''
 
+    def update(self):
+        from haindex.common.util.updater import RepositoryUpdater
+        RepositoryUpdater(repository=self).update()
+
     def __str__(self):
         return self.get_name()
 

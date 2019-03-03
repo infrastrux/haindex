@@ -13,7 +13,7 @@ def update_repository(repository_id, *args, **kwargs):
     repository = Repository.objects.filter(id=repository_id).first()
     if not repository:
         return
-    RepositoryUpdater(repository=repository).update()
+    repository.update()
 
 
 @celery_app.task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5}, retry_backoff=True)
@@ -32,3 +32,10 @@ def subscribe_repository(repository_id, *args, **kwargs):
     if not repository:
         return
     RepositoryUpdater(repository=repository).subscribe()
+
+
+@celery_app.task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5}, retry_backoff=True)
+def fan_out_update_repository_tasks(*args, **kwargs):
+    from haindex.models import Repository
+    for repository in Repository.objects.filter(user__usersocialauth__isnull=True):
+        update_repository.apply_async([repository.id])
