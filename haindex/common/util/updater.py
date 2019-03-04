@@ -81,6 +81,13 @@ class RepositoryUpdater(object):
         self.repository.last_push = repo.pushed_at
         update_fields.append('last_push')
 
+        # update user type
+        if repo.owner.type == 'Organization':
+            self.repository.user_type = getattr(Repository.USER_TYPE_CHOICES, Repository.USER_TYPE_ORG)
+        else:
+            self.repository.user_type = getattr(Repository.USER_TYPE_CHOICES, Repository.USER_TYPE_USER)
+        update_fields.append('user_type')
+
         # get latest commit hash
         try:
             latest_commit = repo.get_commits()[0]

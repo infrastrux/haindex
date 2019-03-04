@@ -17,7 +17,17 @@ class Repository(TimeStampedModel):
         (TYPE_COMPONENT_ID, TYPE_COMPONENT, _('Custom component')),
     )
 
+    USER_TYPE_USER_ID = 1
+    USER_TYPE_USER = 'user'
+    USER_TYPE_ORG_ID = 2
+    USER_TYPE_ORG = 'organization'
+    USER_TYPE_CHOICES = Choices(
+        (USER_TYPE_USER_ID, USER_TYPE_USER, _('User')),
+        (USER_TYPE_ORG_ID, USER_TYPE_ORG, _('Organization')),
+    )
+
     user = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, verbose_name=_('User'))
+    user_type = models.IntegerField(choices=USER_TYPE_CHOICES, default=USER_TYPE_USER_ID, verbose_name=_('User type'))
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     type = models.IntegerField(choices=TYPE_CHOICES, null=True, verbose_name=_('Extension type'))
     parent_repository = models.ForeignKey('haindex.Repository', null=True, blank=True,
